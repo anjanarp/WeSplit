@@ -113,9 +113,87 @@ struct ContentView: View {
                     }
                 } else {
                     // Placeholder for Itemized split view
-                    Text("Itemized Split View - Coming Soon!")
-                    
-                    
+                    Section("Add People") {
+                        TextField("Person Name", text: $newPersonName)
+                            .padding(.vertical, 5)
+                        
+                        Button(action: addPerson) {
+                            Text("Add Person")
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
+                        .padding(.vertical, 5)
+                        
+                        // display list of added people
+                        if !people.isEmpty {
+                            Section("People") {  // This nested section could be the issue
+                                ForEach(people) { person in
+                                    Text(person.name)
+                                        .font(.headline)
+                                }
+                            }
+                        }
+                    }
+
+                    Section("Add new item") {
+                        if people.isEmpty {
+                            Text("Please add people first before adding items")
+                                .foregroundColor(.red)
+                        } else {
+                            TextField("Item Name", text: $newItemName)
+                                .padding(.vertical, 5)
+                            
+                            TextField("Item Price", value: $newItemPrice, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                .keyboardType(.decimalPad)
+                                .focused($amountIsFocused)
+                                .padding(.vertical, 5)
+                            
+                            // select people who ate the item
+                            Section("Select People") {
+                                ForEach(people) { person in
+                                    Toggle(person.name, isOn: Binding(get: {
+                                        selectedPeople.contains(person)
+                                    }, set: { isSelected in
+                                        if isSelected {
+                                            selectedPeople.insert(person)
+                                        } else {
+                                            selectedPeople.remove(person)
+                                        }
+                                    }))
+                                }
+                            }
+                            Button(action: addItem) {
+                                Text("Add Item")
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
+                            }
+                            .padding(.vertical, 5)
+                        }
+                    }
+                    // section to display added items
+                    Section("Items") {
+                        if items.isEmpty {
+                            Text("No items added yet.")
+                        } else {
+                            ForEach(items) { item in
+                                VStack(alignment: .leading) {
+                                    Text(item.name)
+                                        .font(.headline)
+                                    Text(item.price, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                    Text("Shared by: \(item.people.map(\.name).joined(separator: ", "))")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                }
+                                
+                            }
+                        }
+                    }
                 }
             }
             
@@ -129,6 +207,32 @@ struct ContentView: View {
             }
             .navigationTitle("Split the bill")
         }
+    }
+    func addPerson() {
+        // only add the person if the name is not empty
+        guard !newPersonName.isEmpty else {return}
+        
+        let newPerson = Person(name: newPersonName)
+        people.append(newPerson)
+        
+        // clear the input field
+        newPersonName = ""
+    }
+    
+    // function to add a new item to the list
+    func addItem() {
+        // create a new item with the current input
+        let newItem = Item(name: newItemName, price: newItemPrice, people: Array(selectedPeople))
+        
+        // add the new item to the items array
+        items.append(newItem)
+        
+        // reset the input fields
+        newItemName = ""
+        newItemPrice = 0.0
+        
+        // dismiss the keyboard
+        amountIsFocused = false
     }
 }
 
