@@ -7,14 +7,39 @@
 
 import SwiftUI
 
+// Person struct for the concerned attributes of each person
+struct Person: Identifiable, Hashable {
+    var id = UUID()
+    var name: String
+    var amountOwed: Double = 0.0
+}
+
+// Item struct to keep track of food item attributes
+struct Item: Identifiable {
+    var id = UUID() // unique identifier for each item
+    var name: String
+    var price: Double
+    var people: [Person]
+}
+
+
 struct ContentView: View {
-    // state variables
+    // state variables for "equal" split
     @State private var checkAmount = 0.0
     @State private var numberOfPeople = 2
     @State private var tipPercentage = 20
     @FocusState private var amountIsFocused: Bool
     // state to track selected split method
     @State private var splitMethod = "Equal"
+    
+    // additional state variables for "itemized" split
+    @State private var items = [Item]()
+    @State private var newItemName = ""
+    @State private var newItemPrice = 0.0
+    @State private var selectedPeople = Set<Person>()
+    
+    @State private var people = [Person]()
+    @State private var newPersonName = ""
     
     // struct stored properties
     let tipPercentages = [10, 15, 20, 25]
@@ -27,7 +52,7 @@ struct ContentView: View {
         return total
     }
     
-    var totalPerPerson: Double {
+    var totalPerPersonEqual: Double {
         // calculate total per person here
         let peopleCount = Double(numberOfPeople + 2)
         let tipSelection = Double(tipPercentage)
@@ -58,7 +83,7 @@ struct ContentView: View {
                             .focused($amountIsFocused)
                     }
                     Section {
-                        Picker("number of people", selection: $numberOfPeople) {
+                        Picker("Number of people", selection: $numberOfPeople) {
                             ForEach(2..<100) {
                                 Text("\($0) people")
                             }
@@ -84,11 +109,13 @@ struct ContentView: View {
                         Text(totalWithTip, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                     }
                     Section("Amount per person") {
-                        Text(totalPerPerson, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                        Text(totalPerPersonEqual, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                     }
                 } else {
                     // Placeholder for Itemized split view
                     Text("Itemized Split View - Coming Soon!")
+                    
+                    
                 }
             }
             
