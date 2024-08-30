@@ -16,7 +16,7 @@ struct Person: Identifiable, Hashable {
 
 // Item struct to keep track of food item attributes
 struct Item: Identifiable {
-    var id = UUID() // unique identifier for each item
+    var id = UUID()
     var name: String
     var price: Double
     var people: [Person]
@@ -215,6 +215,39 @@ struct ContentView: View {
                             }
                         }
                     }
+                    
+                    Section("How much tip do you want to leave?") {
+                        VStack {
+                            Picker("Tip percentage", selection: $tipPercentage) {
+                                ForEach(0..<101, id: \.self) {
+                                    Text($0, format: .percent)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .padding(.top, 5)
+                            
+                            Text("Tip Amount: \(tipPercentage)%")
+                                .padding(.top, 5)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    
+                    // display for total per person
+                    Section("Amount per Person") {
+                        let totals = calculateTotalsPerPerson()
+                         
+                        ForEach(people) { person in
+                            if let total = totals[person] {
+                                HStack {
+                                    Text(person.name)
+                                        .font(.headline)
+                                    Spacer()
+                                    Text(total, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                        .font(.body)
+                                }
+                            }
+                        }
+                    }
                 }
             }
             
@@ -273,6 +306,27 @@ struct ContentView: View {
         if let index = items.firstIndex(where: { $0.id == item.id }) {
             items.remove(at: index)
         }
+    }
+    
+    func calculateTotalsPerPerson() -> [Person: Double] {
+        var totals = [Person: Double]()
+        
+        for item in items {
+            let share = item.price / Double(item.people.count)
+            for person in item.people {
+                totals[person, default: 0.0] += share
+            }
+        }
+        
+        let totalBill = totals.values.reduce(0, +)
+        let totalWithTip = totalBill + (totalBill * Double(tipPercentage) / 100)
+        let tipRatio = totalWithTip / totalBill
+        
+        for person in totals.keys {
+            totals[person]! *= tipRatio
+        }
+        
+        return totals
     }
 }
 
