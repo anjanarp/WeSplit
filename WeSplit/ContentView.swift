@@ -182,15 +182,36 @@ struct ContentView: View {
                             Text("No items added yet.")
                         } else {
                             ForEach(items) { item in
-                                VStack(alignment: .leading) {
-                                    Text(item.name)
-                                        .font(.headline)
-                                    Text(item.price, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                                    Text("Shared by: \(item.people.map(\.name).joined(separator: ", "))")
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(item.name)
+                                            .font(.headline)
+                                        Text(item.price, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                        Text("Shared by: \(item.people.map(\.name).joined(separator: ", "))")
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                    }
+                                    
+                                    // pushes the icons to the right side
+                                    Spacer()
+                                    
+                                    // edit button UI
+                                    Button(action: {
+                                        editItem(item)
+                                    }) {
+                                        Image(systemName: "pencil")
+                                            .foregroundColor(.blue)
+                                    }
+                                    .buttonStyle(BorderlessButtonStyle())
+                                    
+                                    // delete button UI
+                                    Button(action: {
+                                        deleteItem(item)
+                                    }) {
+                                        Image(systemName: "trash")
+                                            .foregroundColor(.red)
+                                    }
                                 }
-                                
                             }
                         }
                     }
@@ -230,9 +251,28 @@ struct ContentView: View {
         // reset the input fields
         newItemName = ""
         newItemPrice = 0.0
+        selectedPeople.removeAll()
         
         // dismiss the keyboard
         amountIsFocused = false
+    }
+    
+    func editItem(_ item: Item) {
+        // Find the index of the item in the array
+        if let index = items.firstIndex(where: {$0.id == item.id}) {
+            newItemName = items[index].name
+            newItemPrice = items[index].price
+            selectedPeople = Set(items[index].people)
+            
+            // remove the item from the array so that it can be updated
+            items.remove(at: index)
+        }
+    }
+    
+    func deleteItem(_ item: Item) {
+        if let index = items.firstIndex(where: { $0.id == item.id }) {
+            items.remove(at: index)
+        }
     }
 }
 
